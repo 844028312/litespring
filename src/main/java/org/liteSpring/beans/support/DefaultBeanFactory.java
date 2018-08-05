@@ -13,13 +13,13 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.liteSpring.beans.BeanDefinition;
 import org.liteSpring.beans.BeanFactory;
-import org.liteSpring.beans.ConfigurableBeanFactory;
+import org.liteSpring.beans.config.ConfigurableBeanFactory;
 import org.liteSpring.test.v1.BeanFactoryTest;
 import org.liteSpring.util.ClassUtils;
 
-public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitionRegistry {
+public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory,BeanDefinitionRegistry {
 
-	private Map<String,BeanDefinition> beanDefinationMap=new ConcurrentHashMap<String,BeanDefinition>();
+	private Map<String,BeanDefinition> beanDefinationMap=new ConcurrentHashMap<String,BeanDefinition>(64);
 	
 	private ClassLoader loader;
 	
@@ -34,18 +34,33 @@ public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitio
 				throw new BeanCreationException("bean Definition does not exist ");
 				
 			}
-			ClassLoader cl=getClassLoader();
-			Class<?> cls = null;
-				try {
-					cls=cl.loadClass(bean.getBeanClassName());
-				    return  cls.newInstance();
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					throw new BeanCreationException("create bean is"+beanName+"is fail",e);
+			if(bean.isSingleton()){
+				Object object=getSingleton(beanName);
+				if(object==null){
+					object=createBean(beanName,bean);
+					registryBean(beanName, object);
 				}
+				return object;
+			}
+			
+				return createBean(beanName, bean);
+			
+			
 			
 		
+	}
+
+	private Object createBean(String beanName, BeanDefinition bean) {
+		ClassLoader cl=getClassLoader();
+		Class<?> cls = null;
+			try {
+				cls=cl.loadClass(bean.getBeanClassName());
+			    return  cls.newInstance();
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				throw new BeanCreationException("create bean is"+beanName+"is fail",e);
+			}
 	}
 	
 	

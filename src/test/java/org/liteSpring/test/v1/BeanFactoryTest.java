@@ -31,11 +31,21 @@ public class BeanFactoryTest  {
 		
 		BeanDefinition bd=factory.getBeanDefination("petStore");
 		
-		assertEquals("org.liteSpring.service.v1.PetStoreService", bd.getBeanClassName());
+		assertTrue(bd.isSingleton());
 		
-		PetStoreService pat=(PetStoreService)factory.getBean("petStore");
+		assertFalse(bd.isPrototype());
 		
-		assertNotNull(pat);
+		assertEquals(BeanDefinition.SCOPE_DEFAULT,bd.getScope());
+		
+		assertEquals("org.liteSpring.service.v1.PetStoreService",bd.getBeanClassName());
+		
+		PetStoreService petStore = (PetStoreService)factory.getBean("petStore");
+		
+		assertNotNull(petStore);
+		
+		PetStoreService petStore1 = (PetStoreService)factory.getBean("petStore");
+		
+		assertTrue(petStore.equals(petStore1));
 	}
 	
 	@Test
