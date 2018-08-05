@@ -1,24 +1,35 @@
 package org.liteSpring.test.v1;
 
 
+import static org.junit.Assert.*;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.liteSpring.beans.BeanDefination;
-import org.liteSpring.beans.BeanFactory;
+import org.liteSpring.beans.BeanDefinition;
+import org.liteSpring.beans.factory.xml.XmlBeanDefinitionReader;
 import org.liteSpring.beans.support.BeanCreationException;
 import org.liteSpring.beans.support.BeanDefinitionStoreException;
 import org.liteSpring.beans.support.DefaultBeanFactory;
+import org.liteSpring.core.io.ClassPathResource;
 import org.liteSpring.service.v1.PetStoreService;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
-public class BeanFactoryTest extends TestCase {
+public class BeanFactoryTest  {
+	DefaultBeanFactory factory;
+	XmlBeanDefinitionReader reader;
+	
+	@Before
+	public void setFactory(){
+		factory=new DefaultBeanFactory();
+		reader=new XmlBeanDefinitionReader(factory);
+	}
 	
 	@Test
 	public void testGetBean(){
-		BeanFactory factory=new DefaultBeanFactory("petStore_v1.xml");
+		reader.loadBeanDefinition(new ClassPathResource("petStore_v1.xml"));
 		
-		BeanDefination bd=factory.getBeanDefination("petStore");
+		BeanDefinition bd=factory.getBeanDefination("petStore");
 		
 		assertEquals("org.liteSpring.service.v1.PetStoreService", bd.getBeanClassName());
 		
@@ -29,7 +40,8 @@ public class BeanFactoryTest extends TestCase {
 	
 	@Test
 	public void testInvalidBean(){
-		BeanFactory factory=new DefaultBeanFactory("petStore_v1.xml");
+		
+		reader.loadBeanDefinition(new ClassPathResource("petStore_v1.xml"));
 		try{
 			factory.getBean("invalidBean");
 		}catch(BeanCreationException e){
@@ -42,10 +54,11 @@ public class BeanFactoryTest extends TestCase {
 	public void testInvalidXML(){
 		
 		try{
-			BeanFactory factory=new DefaultBeanFactory("xxx.xml");
+			
+			reader.loadBeanDefinition(new ClassPathResource("xxx.xml"));
 		}catch(BeanDefinitionStoreException e){
 			return ;
 		}
-		Assert.fail("expect BeanDefinitionStoreException1111");
+		Assert.fail("expect BeanDefinitionStoreException");
 	}
 }

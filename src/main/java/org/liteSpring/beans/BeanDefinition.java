@@ -1,6 +1,6 @@
 package org.liteSpring.beans;
 
-public interface BeanDefination {
+public interface BeanDefinition {
 
 	public String getBeanClassName();
 }

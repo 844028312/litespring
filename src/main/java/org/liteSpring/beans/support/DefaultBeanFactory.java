@@ -11,32 +11,30 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.liteSpring.beans.BeanDefination;
+import org.liteSpring.beans.BeanDefinition;
 import org.liteSpring.beans.BeanFactory;
+import org.liteSpring.beans.ConfigurableBeanFactory;
 import org.liteSpring.test.v1.BeanFactoryTest;
 import org.liteSpring.util.ClassUtils;
 
-public class DefaultBeanFactory implements BeanFactory {
+public class DefaultBeanFactory implements ConfigurableBeanFactory,BeanDefinitionRegistry {
 
-	private Map<String,BeanDefination> beanDefinationMap=new ConcurrentHashMap<String,BeanDefination>();
+	private Map<String,BeanDefinition> beanDefinationMap=new ConcurrentHashMap<String,BeanDefinition>();
 	
-	public DefaultBeanFactory(String fileName){
-		getBeanDefinationMap(fileName);
-		
-	}
+	private ClassLoader loader;
 	
-	public BeanDefination getBeanDefination(String beanName) {
+	public BeanDefinition getBeanDefination(String beanName) {
 		
 		return beanDefinationMap.get(beanName);
 	}
 
 	public Object getBean(String beanName) {
-		BeanDefination bean=beanDefinationMap.get(beanName);
+		BeanDefinition bean=beanDefinationMap.get(beanName);
 			if(bean==null){
 				throw new BeanCreationException("bean Definition does not exist ");
 				
 			}
-			ClassLoader cl=ClassUtils.getDefaultClassload();
+			ClassLoader cl=getClassLoader();
 			Class<?> cls = null;
 				try {
 					cls=cl.loadClass(bean.getBeanClassName());
@@ -50,38 +48,27 @@ public class DefaultBeanFactory implements BeanFactory {
 		
 	}
 	
-	private void getBeanDefinationMap(String fileName){
+	
+
+	public BeanDefinition getBeanDefinition(String beanId) {
 		
-		ClassLoader cl=ClassUtils.getDefaultClassload();
-		InputStream is=cl.getResourceAsStream(fileName);
-		SAXReader reader=new SAXReader();
-		try {
-			Document document=reader.read(is);
-			Element root=document.getRootElement();
-			
-			List<Element> beans=root.elements();
-			
-			for(Element element:beans ){
-				GenericBeanDefinition beanDefination=new GenericBeanDefinition();
-				beanDefination.setId(element.attributeValue("id"));
-				beanDefination.setName(element.attributeValue("class"));
-				beanDefinationMap.put(beanDefination.getId(), beanDefination);
-			}
-			
-		} catch (DocumentException e) {
-			// TODO Auto-generated catch block
-			throw new BeanDefinitionStoreException("IOException parsing xml document"+fileName+"is fail", e);
-		}finally{
-			if(is !=null){
-				try {
-					is.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
+		return beanDefinationMap.get(beanId);
+	}
+
+	
+	public void registerBeanDefinition(String id, BeanDefinition bd) {
 		
+		beanDefinationMap.put(id, bd);
+	}
+
+	public ClassLoader getClassLoader() {
+		
+		return this.loader=loader==null?ClassUtils.getDefaultClassload():loader;
+	}
+
+	public void setClassLoader(ClassLoader loader) {
+		
+		this.loader=loader;
 	}
 
 }
